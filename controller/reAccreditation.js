@@ -43,6 +43,19 @@ export const addReAccreditation = async (req, res) => {
             return res.status(400).json({ message: 'Invalid input: members and planActivities should be arrays' });
         }
 
+        // Check if the name already exists
+        const checkQuery = "SELECT members FROM members.name WHERE members.name = ?";
+        db.query(checkQuery, [members.name], (err, results) => {
+            if (err) {
+                console.error("Error checking name:", err.message);
+                return res.status(500).json({ message: "Server error." });
+            }
+
+            if (results.length > 0) {
+                return res.status(400).json({ message: `The members already exists.` });
+            }
+        });
+
         // Insert members into org_member table
         for (let member of parsedMembers) {
             const memberValues = [
@@ -71,7 +84,7 @@ export const addReAccreditation = async (req, res) => {
         // Insert finance into finance table 
         for (let finance of parsedFinance) {
             const financeValues = [
-                finance.fiance_id,
+                finance.finance_id,
                 finance.title, 
                 finance.date,
                 finance.totaBudget,
@@ -88,7 +101,7 @@ export const addReAccreditation = async (req, res) => {
         // Insert accomplishment into accomplishment table
         for (let accomplishment of parsedAccomplishment) {
             const accomplishmentValues = [
-                accompId, 
+                accomplishment.accomp_id, 
                 accomplishment.title,
                 accomplishment.date,
                 accomplishment.venue, 
@@ -105,10 +118,10 @@ export const addReAccreditation = async (req, res) => {
 
         // Insert Re-Accreditation data into Re-Accreditation table
         const ReAccreditationValues = [
-            orgRandId,
-            actRandId,
-            financeId,
-            accompId,
+            org_id,
+            act_id,
+            finance_id,
+            accomp_id,
             appendices[0].path,
             constitution[0].path,
             orgName,
@@ -151,11 +164,26 @@ export const getReAccreditation = async (req, res) =>{
                 activity.targetTime AS plan_targetTime,
                 activity.targetGroup AS plan_targetGroup,
                 activity.personsInvolved AS plan_personsInvolved
+                fin.title AS finance_title,
+                fin.date AS finance_date,
+                fin.totalBudget AS finance_totalBudget,
+                fin.source AS finance_source,
+                fin.item AS finance_item,
+                fin.quantity AS finance_quantity,
+                fin.unitPrice AS finance_unitPrice,
+                fin.receipt AS finance_receipt,
+                accom.title AS accomplishment_title
+                accom.date AS accomplishment_date
+                accom.venue AS accomplishment_venue
+                accom.participants AS accomplishment_participants
+                accom.speakers AS accomplishment_speakers
+                accom.body AS accomplishment_body
 
             FROM reAccreditation reAccre
             LEFT JOIN org_member org ON reAccre.org_id = org.org_id
-            LEFT JOIN activity activity ON reAccre.act_id = activity.act_id;
-            LEFT JOIN finance fin ON reAccre.
+            LEFT JOIN activity activity ON reAccre.act_id = activity.act_id
+            LEFT JOIN finance fin ON reAccre.finance_id = fin.finance_id
+            LEFT JOIN accomplishment accom ON reAcree.accom_id = accom.accom_id;
         `;
         
         // Fetch the data from the database
@@ -170,6 +198,8 @@ export const getReAccreditation = async (req, res) =>{
                     accre_id: row.accre_id,
                     org_id: row.org_id,
                     act_id: row.act_id,
+                    finance_id: row.finanice_id,
+                    accomp_id: row.accomp_id,
                     appendices: row.appendices,
                     constitution: row.constitution,
                     orgName: row.orgName,
@@ -198,6 +228,31 @@ export const getReAccreditation = async (req, res) =>{
                     targetTime: row.plan_targetTime,
                     targetGroup: row.plan_targetGroup,
                     personsInvolved: row.plan_personsInvolved
+                });
+            }
+
+            if (row.finance_title) {
+                ReAccreditation.finance.push({
+                    title: row.finance_title,
+                    date: row.finance_date,
+                    totalBudget: row.finance_totalBudget,
+                    source: row.finance_source,
+                    particulars: row.finance_particulars,
+                    item: row.finance_item,
+                    quantity: row.finance_unitPrice,
+                    amount: row.finance_amount,
+                    receipt: row.finance_receipt
+                });
+            }
+
+            if (row.accomplishment_title) {
+                ReAccreditation.accomplishment.push({
+                    title: row.accomplishment_title,
+                    date: row.accomplishment_date,
+                    venue: row.accomplishment_venue,
+                    participants: row.accomplishment_participants,
+                    speakers: row.accomplishment_speakers,
+                    body: row.accomplishment_body,
                 });
             }
             

@@ -98,7 +98,7 @@ const createFinanceTable = async () => {
             particulars VARCHAR(999),
             item VARCHAR(999),
             quantity VARCHAR(999),
-            unitPrice VACHAR(999),
+            unitPrice VARCHAR(999),
             amount VARCHAR(999),
             receipt VARCHAR(999)
         )
@@ -121,7 +121,7 @@ const createAccomplishmentTable = async () => {
             venue VARCHAR(999),
             participants VARCHAR(999),
             speakers VARCHAR(999),
-            body VARCHAR(MAX)
+            body VARCHAR(999)
         )
     `
 
