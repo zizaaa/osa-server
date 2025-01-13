@@ -72,7 +72,6 @@ const createReAccreditationTable = async () => {
             finance_id VARCHAR (999),
             accomp_id VARCHAR (999),
             appendices VARCHAR(999),
-            constitution VARCHAR(999),
             orgName VARCHAR(999),
             type VARCHAR(999),
             letter VARCHAR(999) 
@@ -90,7 +89,8 @@ const createReAccreditationTable = async () => {
 const createFinanceTable = async () => {   
     const query = `
         CREATE TABLE IF NOT EXISTS finance (
-            finance_id INT AUTO_INCREMENT PRIMARY KEY,
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            finance_id VARCHAR(999),
             title VARCHAR(999),
             date VARCHAR(999),
             totalBudget VARCHAR(999),
@@ -115,7 +115,8 @@ const createFinanceTable = async () => {
 const createAccomplishmentTable = async () => {
     const query = `
         CREATE TABLE IF NOT EXISTS accomplishment (
-            accomp_id INT AUTO_INCREMENT PRIMARY KEY,
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            accomp_id VARCHAR(999),
             title VARCHAR(999),
             date VARCHAR(999),
             venue VARCHAR(999),

@@ -1,18 +1,20 @@
-// import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, validate } from 'uuid';
 import { db } from '../config/db.js';
 
 export const addReAccreditation = async (req, res) => {
+    const financeRandId = uuidv4();
+    const accompRandId = uuidv4();
 
-    // Access uploaded files by field name
-    const { constitution, letter, appendices } = req.files; // Each field returns an array of files
+    // // Access uploaded files by field name
+    // const { letter, appendices } = req.files; // Each field returns an array of files
 
-    if (!constitution || !letter || !appendices) {
-        return res.status(400).json({ message: 'Required files are missing' });
-    }
+    // if (!letter || !appendices) {
+    //     return res.status(400).json({ message: 'Required files are missing' });
+    // }
 
     const insertReAccreditationQuery = `
-        INSERT INTO accreditation (org_id, act_id, finance_id, accomp_id, appendices, constitution, orgName, type, letter) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+        INSERT INTO reAccreditation (org_id, act_id, finance_id, accomp_id, appendices, orgName, type, letter) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
     `;
     const insertOrgMemberQuery = `
         INSERT INTO org_member (org_id, name, position, contactNumber, studentNumber) 
@@ -23,7 +25,7 @@ export const addReAccreditation = async (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?);
     `;
     const insertFinancialQuery = `
-        INSERT INTO finance (finance_id, title, date, totalBudget, source, item, quantity, unitPrice, amount, receipt)
+        INSERT INTO finance (finance_id, title, date, totalBudget, particulars, source, item, quantity, unitPrice, amount, receipt)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     `;
     const insertAccomplishmentQuery = `
@@ -31,30 +33,43 @@ export const addReAccreditation = async (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
 
-    const { orgName, type, members, planActivities, } = req.body;
+    const { orgName, type, members, planActivities, finance, accomplishment, letter, appendices } = req.body;
 
     try {
         // Parse members and planActivities
-        const parsedMembers = JSON.parse(members);
-        const parsedPlanActivities = JSON.parse(planActivities);
+        const parsedMembers = members;
+        const parsedPlanActivities = planActivities;
+        const parsedAccomplishment = accomplishment;
+        const parsedFinance = finance;
 
         // Validate that members and planActivities are arrays
         if (!Array.isArray(parsedMembers) || !Array.isArray(parsedPlanActivities)) {
             return res.status(400).json({ message: 'Invalid input: members and planActivities should be arrays' });
         }
 
+        validateMembers()
         // Check if the name already exists
-        const checkQuery = "SELECT members FROM members.name WHERE members.name = ?";
-        db.query(checkQuery, [members.name], (err, results) => {
-            if (err) {
-                console.error("Error checking name:", err.message);
-                return res.status(500).json({ message: "Server error." });
-            }
+        // const checkQuery = "SELECT * FROM org_member WHERE name = ? ";
+        // const [results] = await db.query(checkQuery, [members[0].name], (err, results) => {
+        //     if (err) {
+        //         console.error("Error checking name:", err.message);
+        //         return res.status(500).json({ message: "Server error." });
+        //     }
+        // });
 
-            if (results.length > 0) {
-                return res.status(400).json({ message: `The members already exists.` });
-            }
-        });
+        // if (results.length > 0) {
+        //     return res.status(400).json({ message: `The members already exists.` });
+        // }
+
+        // const [results] = await db.query(
+        //     'SELECT * FROM `org_member` WHERE `name` = ? ',
+        //     [members[0].name]
+        //   );
+        //   if (results.length > 0) {
+        //         return res.status(400).json({ message: `The members already exists.` });
+        //     }
+
+        // console.log(results)
 
         // Insert members into org_member table
         for (let member of parsedMembers) {
@@ -84,10 +99,11 @@ export const addReAccreditation = async (req, res) => {
         // Insert finance into finance table 
         for (let finance of parsedFinance) {
             const financeValues = [
-                finance.finance_id,
+                financeRandId,
                 finance.title, 
                 finance.date,
                 finance.totaBudget,
+                finance.particulars,
                 finance.source,
                 finance.item,
                 finance.quantity,
@@ -101,7 +117,7 @@ export const addReAccreditation = async (req, res) => {
         // Insert accomplishment into accomplishment table
         for (let accomplishment of parsedAccomplishment) {
             const accomplishmentValues = [
-                accomplishment.accomp_id, 
+                accompRandId, 
                 accomplishment.title,
                 accomplishment.date,
                 accomplishment.venue, 
@@ -112,21 +128,19 @@ export const addReAccreditation = async (req, res) => {
             await db.query(insertAccomplishmentQuery, accomplishmentValues)
         }
 
-        console.log(appendices)
-        console.log(constitution)
-        console.log(letter)
+        // console.log(appendices)
+        // console.log(letter)
 
         // Insert Re-Accreditation data into Re-Accreditation table
         const ReAccreditationValues = [
-            org_id,
-            act_id,
-            finance_id,
-            accomp_id,
-            appendices[0].path,
-            constitution[0].path,
+            members[0].org_id,
+            planActivities[0].act_id,
+            financeRandId,
+            accompRandId,
             orgName,
             type,
-            letter[0].path
+            appendices,
+            letter
         ];
         const [ReAccreditationResult] = await db.query(insertReAccreditationQuery, ReAccreditationValues);
 
@@ -141,17 +155,29 @@ export const addReAccreditation = async (req, res) => {
         res.status(500).json({ error: 'Failed to add ReAccreditation', details: err.message });
     }
 };
+const validateMembers = async (req, res) => {
+    const checkQuery = "SELECT * FROM org_member WHERE name = ? ";
+        const [results] = await db.query(checkQuery, [members[0].name], (err, results) => {
+            if (err) {
+                console.error("Error checking name:", err.message);
+                return res.status(500).json({ message: "Server error." });
+            }
+        });
+
+        if (results.length > 0) {
+            return res.status(400).json({ message: `The members already exists.` });
+        }
+}
 
 export const getReAccreditation = async (req, res) =>{
     try {
         // SQL query to join the tables and fetch relevant data
         const query = `
             SELECT 
-                reAccre.accre_id,
+                reAccre.reAccre_id,
                 reAccre.org_id,
                 reAccre.act_id,
                 reAccre.appendices,
-                reAccre.constitution,
                 reAccre.orgName,
                 reAccre.type,
                 reAccre.letter,
@@ -163,7 +189,7 @@ export const getReAccreditation = async (req, res) =>{
                 activity.learningOutcomes AS plan_learningOutcomes,
                 activity.targetTime AS plan_targetTime,
                 activity.targetGroup AS plan_targetGroup,
-                activity.personsInvolved AS plan_personsInvolved
+                activity.personsInvolved AS plan_personsInvolved,
                 fin.title AS finance_title,
                 fin.date AS finance_date,
                 fin.totalBudget AS finance_totalBudget,
@@ -172,18 +198,18 @@ export const getReAccreditation = async (req, res) =>{
                 fin.quantity AS finance_quantity,
                 fin.unitPrice AS finance_unitPrice,
                 fin.receipt AS finance_receipt,
-                accom.title AS accomplishment_title
-                accom.date AS accomplishment_date
-                accom.venue AS accomplishment_venue
-                accom.participants AS accomplishment_participants
-                accom.speakers AS accomplishment_speakers
+                accom.title AS accomplishment_title,
+                accom.date AS accomplishment_date,
+                accom.venue AS accomplishment_venue,
+                accom.participants AS accomplishment_participants,
+                accom.speakers AS accomplishment_speakers,
                 accom.body AS accomplishment_body
 
             FROM reAccreditation reAccre
             LEFT JOIN org_member org ON reAccre.org_id = org.org_id
             LEFT JOIN activity activity ON reAccre.act_id = activity.act_id
             LEFT JOIN finance fin ON reAccre.finance_id = fin.finance_id
-            LEFT JOIN accomplishment accom ON reAcree.accom_id = accom.accom_id;
+            LEFT JOIN accomplishment accom ON reAccre.accomp_id = accom.accomp_id;
         `;
         
         // Fetch the data from the database
@@ -201,7 +227,6 @@ export const getReAccreditation = async (req, res) =>{
                     finance_id: row.finanice_id,
                     accomp_id: row.accomp_id,
                     appendices: row.appendices,
-                    constitution: row.constitution,
                     orgName: row.orgName,
                     type: row.type,
                     letter: row.letter,

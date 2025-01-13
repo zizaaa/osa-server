@@ -7,7 +7,7 @@ export const addAccreditation = async (req, res) => {
 
     // Access uploaded files by field name
     const { constitution, letter, appendices } = req.files; // Each field returns an array of files
-
+    console.log(req.files)
     if (!constitution || !letter || !appendices) {
         return res.status(400).json({ message: 'Required files are missing' });
     }
