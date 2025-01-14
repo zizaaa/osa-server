@@ -5,8 +5,9 @@ export const addReAccreditation = async (req, res) => {
     const financeRandId = uuidv4();
     const accompRandId = uuidv4();
 
-    // // Access uploaded files by field name
+    // Access uploaded files by field name
     // const { letter, appendices } = req.files; // Each field returns an array of files
+
 
     // if (!letter || !appendices) {
     //     return res.status(400).json({ message: 'Required files are missing' });
@@ -41,25 +42,27 @@ export const addReAccreditation = async (req, res) => {
         const parsedPlanActivities = planActivities;
         const parsedAccomplishment = accomplishment;
         const parsedFinance = finance;
+    
 
         // Validate that members and planActivities are arrays
         if (!Array.isArray(parsedMembers) || !Array.isArray(parsedPlanActivities)) {
             return res.status(400).json({ message: 'Invalid input: members and planActivities should be arrays' });
         }
 
-        validateMembers()
         // Check if the name already exists
-        // const checkQuery = "SELECT * FROM org_member WHERE name = ? ";
-        // const [results] = await db.query(checkQuery, [members[0].name], (err, results) => {
-        //     if (err) {
-        //         console.error("Error checking name:", err.message);
-        //         return res.status(500).json({ message: "Server error." });
-        //     }
-        // });
+        const checkQuery = "SELECT * FROM org_member WHERE name = ? ";
+        const [results] = await db.query(checkQuery, [members[0].name], (err, results) => {
+            if (err) {
+                console.error("Error checking name:", err.message);
+                return res.status(500).json({ message: "Server error." });
+            }
+        });
 
-        // if (results.length > 0) {
-        //     return res.status(400).json({ message: `The members already exists.` });
-        // }
+        if (results.length > 0) {
+            return res.status(400).json({ message: `The members already exists.` });
+        }
+
+        // csv reader
 
         // const [results] = await db.query(
         //     'SELECT * FROM `org_member` WHERE `name` = ? ',
@@ -155,19 +158,6 @@ export const addReAccreditation = async (req, res) => {
         res.status(500).json({ error: 'Failed to add ReAccreditation', details: err.message });
     }
 };
-const validateMembers = async (req, res) => {
-    const checkQuery = "SELECT * FROM org_member WHERE name = ? ";
-        const [results] = await db.query(checkQuery, [members[0].name], (err, results) => {
-            if (err) {
-                console.error("Error checking name:", err.message);
-                return res.status(500).json({ message: "Server error." });
-            }
-        });
-
-        if (results.length > 0) {
-            return res.status(400).json({ message: `The members already exists.` });
-        }
-}
 
 export const getReAccreditation = async (req, res) =>{
     try {

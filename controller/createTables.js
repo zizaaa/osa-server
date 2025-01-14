@@ -5,8 +5,9 @@ const createMemberTable = async () => {
         CREATE TABLE IF NOT EXISTS org_member (
             id INT AUTO_INCREMENT PRIMARY KEY,
             org_id VARCHAR(999), 
-            name VARCHAR(999), 
-            position VARCHAR(999), 
+            name VARCHAR(999),
+            position VARCHAR(999),
+            email VARCHAR(999),
             contactNumber VARCHAR(999), 
             studentNumber VARCHAR(999)
         );
