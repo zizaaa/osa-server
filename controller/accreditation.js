@@ -1,25 +1,31 @@
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../config/db.js';
+import { csvExtractor } from '../hooks/csvExtractor.js';
 
 export const addAccreditation = async (req, res) => {
+
     const orgRandId = uuidv4();
     const actRandId = uuidv4();
 
     // Access uploaded files by field name
-    const { constitution, letter, appendices } = req.files; // Each field returns an array of files
+    const { memberFile, planFile, constitution, letter, appendices } = req.files; // Each field returns an array of files
 
     if (!constitution || !letter || !appendices) {
         return res.status(400).json({ message: 'Required files are missing' });
     }
 
-    const insertOrgMemberQuery = `
-        INSERT INTO org_member (org_id, name, position, contactNumber, studentNumber) 
-        VALUES (?, ?, ?, ?, ?);
-    `;
-    const insertActivityQuery = `
-        INSERT INTO activity (act_id, activity, learningOutcomes, targetTime, targetGroup, personsInvolved) 
-        VALUES (?, ?, ?, ?, ?, ?);
-    `;
+    if (memberFile) {
+        const fileName = req.files['memberFile'].filename
+        // console.log(fileName)
+        const csv = await csvExtractor(orgRandId, actRandId, fileName, "members" ,)
+    }
+
+    if (planFile) {
+        const fileName = req.files['planFile'].filename
+        // console.log(fileName)
+        const csv = await csvExtractor(orgRandId, actRandId, fileName, "planActivities" ,)
+    }
+
     const insertAccreditationQuery = `
         INSERT INTO accreditation (org_id, act_id, appendices, constitution, orgName, type, letter) 
         VALUES (?, ?, ?, ?, ?, ?, ?);
@@ -28,6 +34,7 @@ export const addAccreditation = async (req, res) => {
     const { orgName, type, members, planActivities } = req.body;
 
     try {
+
         // Parse members and planActivities
         const parsedMembers = JSON.parse(members);
         const parsedPlanActivities = JSON.parse(planActivities);
@@ -37,33 +44,6 @@ export const addAccreditation = async (req, res) => {
             return res.status(400).json({ message: 'Invalid input: members and planActivities should be arrays' });
         }
 
-        // Insert members into org_member table
-        for (let member of parsedMembers) {
-            const memberValues = [
-                orgRandId,
-                member.name,
-                member.position,
-                member.contactNumber,
-                member.studentNumber
-            ];
-            await db.query(insertOrgMemberQuery, memberValues);
-        }
-
-        // Insert activities into activity table
-        for (let activity of parsedPlanActivities) {
-            const activityValues = [
-                actRandId,
-                activity.activity,
-                activity.learningOutcome,
-                activity.targetTime,
-                activity.targetGroup,
-                activity.personsInvolved
-            ];
-            await db.query(insertActivityQuery, activityValues);
-        }
-        console.log(appendices)
-        console.log(constitution)
-        console.log(letter)
         // Insert accreditation data into accreditation table
         const accreditationValues = [
             orgRandId,
@@ -88,8 +68,11 @@ export const addAccreditation = async (req, res) => {
     }
 };
 
+// const Fs = require('fs');
+// const CsvReadableStream = require('csv-reader');
 
 export const getAccreditation = async (req,res) =>{
+
     try {
         // SQL query to join the tables and fetch relevant data
         const query = `
