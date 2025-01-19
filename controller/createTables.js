@@ -21,6 +21,27 @@ const createMemberTable = async () => {
     }
 };
 
+const createOfficerTable = async () => {
+    const query = `
+        CREATE TABLE IF NOT EXISTS org_member (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            org_id VARCHAR(999), 
+            name VARCHAR(999),
+            position VARCHAR(999),
+            email VARCHAR(999),
+            contactNumber VARCHAR(999), 
+            studentNumber VARCHAR(999)
+        );
+    `;
+
+    try {
+        await db.query(query);
+        console.log('Table "org_member" created successfully!');
+    } catch (err) {
+        console.error('Error creating table "org_member":', err);
+    }
+};
+
 const createActTable = async () => {
     const query = `
         CREATE TABLE IF NOT EXISTS activity (

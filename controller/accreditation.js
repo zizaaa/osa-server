@@ -8,7 +8,11 @@ export const addAccreditation = async (req, res) => {
     const actRandId = uuidv4();
 
     // Access uploaded files by field name
-    const { memberFile, planFile } = req.files; // Each field returns an array of files
+    const { memberFile, planFile, constitution, letter, appendices } = req.files; // Each field returns an array of files
+
+    if (!constitution || !letter || !appendices) {
+        return res.status(400).json({ message: 'Required files are missing' });
+    }
 
     if (memberFile) {
         const fileName = req.files['memberFile'].filename
@@ -21,82 +25,47 @@ export const addAccreditation = async (req, res) => {
         // console.log(fileName)
         const csv = await csvExtractor(orgRandId, actRandId, fileName, "planActivities" ,)
     }
-    // const insertOrgMemberQuery = `
-    //     INSERT INTO org_member (org_id, name, position, email, contactNumber, studentNumber) 
-    //     VALUES (?, ?, ?, ?, ?, ?);
-    // `;
-    // const insertActivityQuery = `
-    //     INSERT INTO activity (act_id, activity, learningOutcomes, targetTime, targetGroup, personsInvolved) 
-    //     VALUES (?, ?, ?, ?, ?, ?);
-    // `;
-    // const insertAccreditationQuery = `
-    //     INSERT INTO accreditation (org_id, act_id, appendices, constitution, orgName, type, letter) 
-    //     VALUES (?, ?, ?, ?, ?, ?, ?);
-    // `;
 
-    // const { orgName, type, members, planActivities } = req.body;
+    const insertAccreditationQuery = `
+        INSERT INTO accreditation (org_id, act_id, appendices, constitution, orgName, type, letter) 
+        VALUES (?, ?, ?, ?, ?, ?, ?);
+    `;
 
-    // try {
+    const { orgName, type, members, planActivities } = req.body;
 
-        // for (let member of parsedMembers) {
-        //     const memberValues = [
-        //         orgRandId,
-        //         member.name,
-        //         member.position,
-        //         member.email,
-        //         member.contactNumber,
-        //         member.studentNumber
-        //     ];
-        //     await db.query(insertOrgMemberQuery, memberValues);
-        // }
-    //     // Parse members and planActivities
-    //     const parsedMembers = JSON.parse(members);
-    //     const parsedPlanActivities = JSON.parse(planActivities);
+    try {
 
-    //     // Validate that members and planActivities are arrays
-    //     if (!Array.isArray(parsedMembers) || !Array.isArray(parsedPlanActivities)) {
-    //         return res.status(400).json({ message: 'Invalid input: members and planActivities should be arrays' });
-    //     }
+        // Parse members and planActivities
+        const parsedMembers = JSON.parse(members);
+        const parsedPlanActivities = JSON.parse(planActivities);
 
-    //     // Insert members into org_member table
+        // Validate that members and planActivities are arrays
+        if (!Array.isArray(parsedMembers) || !Array.isArray(parsedPlanActivities)) {
+            return res.status(400).json({ message: 'Invalid input: members and planActivities should be arrays' });
+        }
 
-    //     // Insert activities into activity table
-    //     for (let activity of parsedPlanActivities) {
-    //         const activityValues = [
-    //             actRandId,
-    //             activity.activity,
-    //             activity.learningOutcome,
-    //             activity.targetTime,
-    //             activity.targetGroup,
-    //             activity.personsInvolved
-    //         ];
-    //         await db.query(insertActivityQuery, activityValues);
-    //     }
-    //     console.log(appendices)
-    //     console.log(constitution)
-    //     console.log(letter)
-    //     // Insert accreditation data into accreditation table
-    //     const accreditationValues = [
-    //         orgRandId,
-    //         actRandId,
-    //         appendices[0].path,
-    //         constitution[0].path,
-    //         orgName,
-    //         type,
-    //         letter[0].path
-    //     ];
-    //     const [accreditationResult] = await db.query(insertAccreditationQuery, accreditationValues);
+        // Insert accreditation data into accreditation table
+        const accreditationValues = [
+            orgRandId,
+            actRandId,
+            appendices[0].path,
+            constitution[0].path,
+            orgName,
+            type,
+            letter[0].path
+        ];
+        const [accreditationResult] = await db.query(insertAccreditationQuery, accreditationValues);
 
-    //     // Respond with success
-    //     res.status(201).json({
-    //         message: 'Accreditation added successfully!',
-    //         accreditationId: accreditationResult.insertId
-    //     });
+        // Respond with success
+        res.status(201).json({
+            message: 'Accreditation added successfully!',
+            accreditationId: accreditationResult.insertId
+        });
 
-    // } catch (err) {
-    //     console.error('Error adding accreditation:', err);
-    //     res.status(500).json({ error: 'Failed to add accreditation', details: err.message });
-    // }
+    } catch (err) {
+        console.error('Error adding accreditation:', err);
+        res.status(500).json({ error: 'Failed to add accreditation', details: err.message });
+    }
 };
 
 // const Fs = require('fs');
