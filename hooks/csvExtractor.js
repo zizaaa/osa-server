@@ -2,9 +2,9 @@ import Fs from 'fs';
 import CsvReadableStream from 'csv-reader';
 import { db } from '../config/db.js';
 
-export const csvExtractor = async (orgRandId, actRandId, fileName, type) => {
+export const csvExtractor = async (orgRandId, actRandId, path, type) => {
 
-    let inputStream = Fs.createReadStream('./uploads/' + fileName, 'utf8');
+    let inputStream = Fs.createReadStream(path, 'utf8');
     let isFirstRow = true
     let headers = []
     let parsedMembers = []
@@ -45,19 +45,20 @@ export const csvExtractor = async (orgRandId, actRandId, fileName, type) => {
             }
         }
 
-        if (type === "planActivities") {
-            for (let activity of parsedPlanActivities) {
-                const activityValues = [
-                    actRandId,
-                    activity.activity,
-                    activity.learningOutcome,
-                    activity.targetTime,
-                    activity.targetGroup,
-                    activity.personsInvolved
-                ];
-                db.query(insertActivityQuery, activityValues);
-            }
-        }
+        // if (type === "planActivities") {
+        //     for (let activity of parsedPlanActivities) {
+        //         const activityValues = [
+        //             actRandId,
+        //             activity.activity,
+        //             activity.learningOutcome,
+        //             activity.targetTime,
+        //             activity.targetGroup,
+        //             activity.personsInvolved
+        //         ];
+        //         db.query(insertActivityQuery, activityValues);
+        //     }
+        // }
+        
         message = 'CSV processing completed.' 
     })
     .on('error', (error) => {
