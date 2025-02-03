@@ -4,7 +4,7 @@ import { upload } from "../controller/multer.js";
 
 const router = Router();
 
-router.post('/accreditation',  upload.fields([{ name: 'membersFile', maxCount: 1},{ name: 'constitution', maxCount: 1 },{ name: 'letter', maxCount: 1 },{ name: 'appendices', maxCount: 1 }]), addAccreditation);
+router.post('/accreditation',  upload.fields([{ name: 'officersFile', maxCount: 1},{ name: 'membersFile', maxCount: 1},{ name: 'constitution', maxCount: 1 },{ name: 'letter', maxCount: 1 },{ name: 'appendices', maxCount: 1 }]), addAccreditation);
 router.get('/accreditation', getAccreditation);
 
 export default router;

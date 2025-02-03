@@ -4,6 +4,6 @@ import mysql from 'mysql2/promise'; // Using promise-based pool
 export const db = mysql.createPool({
     host: 'localhost',
     user: 'root',
-    password: '1234', 
+    password: 'BEC-130c', 
     database: 'osa',
 });
